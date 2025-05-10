@@ -9,12 +9,20 @@ export const register = async (req: Request, res: Response, next: NextFunction):
     const { username, email, password } = req.body;
     const hashed = await hashPassword(password);
 
-    await pool.query(
-      'INSERT INTO users (username, email, password_hash, role) VALUES ($1, $2, $3, $4)',
+    const result = await pool.query(
+      'INSERT INTO users (username, email, password_hash, role) VALUES ($1, $2, $3, $4) RETURNING id, role',
       [username, email, hashed, 'user']
     );
 
-    res.status(201).json({ message: 'Пользователь зарегистрирован' });
+    const user = result.rows[0];
+
+    const token = jwt.sign(
+      { userId: user.id, role: user.role },
+      process.env.JWT_SECRET!,
+      { expiresIn: '1d' }
+    );
+
+    res.status(201).json({ message: 'Пользователь зарегистрирован', token });
   } catch (err) {
     next(err);
   }

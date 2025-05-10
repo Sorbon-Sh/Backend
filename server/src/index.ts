@@ -1,12 +1,20 @@
 import express from 'express';
+import cors from 'cors';
 import dotenv from 'dotenv';
 import { pool } from './db';
 import authRoutes from './routes/auth';
 
 dotenv.config();
 
+
 const app = express();
 app.use(express.json());
+
+app.use(cors({
+  origin: 'http://localhost:5173', // Разрешаем клиенту
+  credentials: true               // Если ты используешь cookies или Authorization
+}));
+
 
 // Маршрут для проверки подключения к БД
 app.get('/test-db', async (req, res) => {
